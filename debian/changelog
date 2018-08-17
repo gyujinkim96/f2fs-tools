@@ -1,3 +1,13 @@
+f2fs-tools (1.11.0-1) unstable; urgency=medium
+
+  * New upstream release.   (Closes: #904286)
+     - add sg_write_buffer for UFS firmware update in Android
+     - wanted_sector_size to specify sector size explicity
+     - support fsverity feature bit
+     - support lost+found feature
+
+ -- Theodore Y. Ts'o <tytso@mit.edu>  Fri, 17 Aug 2018 15:30:50 -0400
+
 f2fs-tools (1.10.0-1) unstable; urgency=medium
 
   * Acknowledge NMU, thanks to Adam Borowski!
