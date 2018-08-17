@@ -1,0 +1,117 @@
+f2fs-tools (1.10.0-1) unstable; urgency=medium
+
+  * Acknowledge NMU, thanks to Adam Borowski!
+  * New upstream release.
+    - fsck.f2fs now supports "-y". (Closes: #883026)
+  * Update Standards version to 4.1.3.
+    - Change all priority: extra packages to be priority: optional.
+
+ -- Vincent Cheng <vcheng@debian.org>  Wed, 28 Feb 2018 02:51:41 -0800
+
+f2fs-tools (1.7.0-1.1) unstable; urgency=medium
+
+  * NMU with permission.
+  * Make an udeb. (Closes: #848551)
+
+ -- Adam Borowski <kilobyte@angband.pl>  Sat, 24 Dec 2016 22:54:41 +0100
+
+f2fs-tools (1.7.0-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Add new build-dep on libselinux1-dev.
+  * Use triggers instead of manually calling update-initramfs on postinst.
+  * Update Standards version to 3.9.8.
+
+ -- Vincent Cheng <vcheng@debian.org>  Thu, 01 Sep 2016 23:47:51 -0700
+
+f2fs-tools (1.6.1-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Fix segfault when executing "fsck.f2fs -a". (Closes: #813806)
+  * Update Standards version to 3.9.7.
+
+ -- Vincent Cheng <vcheng@debian.org>  Sun, 03 Apr 2016 22:05:14 -0700
+
+f2fs-tools (1.6.0-2) unstable; urgency=medium
+
+  * Add multiarch support for libf2fs-dev and libf2fs0.
+
+ -- Vincent Cheng <vcheng@debian.org>  Mon, 28 Dec 2015 21:58:51 -0800
+
+f2fs-tools (1.6.0-1) unstable; urgency=medium
+
+  * New upstream release. (Closes: #807411)
+    - mkfs/Makefile.am: add a section to build libf2fs_fmt (Closes: #793863)
+    - Add new binary packages for the above change: libf2fs0, libf2fs-dev.
+      Based off of Kai-Chung Yan's patch, thanks!
+    - Add appropriate Breaks/Replaces clauses to ensure smooth upgrades.
+  * Add postinst to update the initramfs on install/upgrade. (Closes: #804241)
+  * Update watch file.
+
+ -- Vincent Cheng <vcheng@debian.org>  Mon, 21 Dec 2015 22:41:40 -0800
+
+f2fs-tools (1.4.1-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Drop patch fix-big-endian-ftbfs.patch, applied upstream.
+  * Add watch file.
+
+ -- Vincent Cheng <vcheng@debian.org>  Wed, 29 Apr 2015 01:29:28 -0700
+
+f2fs-tools (1.4.0-2) unstable; urgency=medium
+
+  * Fix FTBFS on big-endian archs. (Closes: #762411)
+  * Update Standards version to 3.9.6.
+
+ -- Vincent Cheng <vcheng@debian.org>  Wed, 24 Sep 2014 00:39:16 -0700
+
+f2fs-tools (1.4.0-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Add auto_fix feature. (Closes: #757538)
+  * Restrict arch to linux-any.
+
+ -- Vincent Cheng <vcheng@debian.org>  Sat, 20 Sep 2014 11:06:09 -0700
+
+f2fs-tools (1.3.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Vincent Cheng <vcheng@debian.org>  Sun, 20 Apr 2014 01:55:55 -0700
+
+f2fs-tools (1.2.0-1) unstable; urgency=medium
+
+  * Adopt package. (Closes: #723596)
+  * New upstream release. (LP: #1261173)
+  * Add build-dep on dh-autoreconf and pkg-config.
+  * Install manpage for mkfs.f2fs(8).
+  * Update Standards version to 3.9.5.
+  * Add Vcs-* fields in debian/control.
+
+ -- Vincent Cheng <vcheng@debian.org>  Wed, 22 Jan 2014 04:21:31 -0800
+
+f2fs-tools (1.1.0-3) unstable; urgency=low
+
+  * Do not set compression level to -9 as it uses too much memory.
+
+ -- Luk Claes <luk@debian.org>  Tue, 07 May 2013 18:51:21 +0200
+
+f2fs-tools (1.1.0-2) unstable; urgency=low
+
+  * Taking over with maintainer's consent.
+  * Update Homepage (Closes: #702139).
+
+ -- Luk Claes <luk@debian.org>  Tue, 26 Mar 2013 07:49:02 +0100
+
+f2fs-tools (1.1.0-1) unstable; urgency=low
+
+  * Merging upstream version 1.1.0 (Closes: #691360).
+  * Adding uuid-dev to build-depends.
+
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Mon, 10 Dec 2012 12:04:59 +0100
+
+f2fs-tools (1.0.0-1) unstable; urgency=low
+
+  * Initial release.
+
+ -- Daniel Baumann <daniel.baumann@progress-technologies.net>  Sun, 07 Oct 2012 05:30:50 +0200
