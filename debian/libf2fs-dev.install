@@ -1,4 +1,4 @@
 include/*                        usr/include/f2fs-tools
-lib/*/lib*.a
-lib/*/lib*.so
+usr/lib/*/lib*.a
+usr/lib/*/lib*.so
 mkfs/*.h                         usr/include/f2fs-tools
