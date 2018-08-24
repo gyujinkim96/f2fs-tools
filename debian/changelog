@@ -5,8 +5,13 @@ f2fs-tools (1.11.0-1) unstable; urgency=medium
      - wanted_sector_size to specify sector size explicitly
      - support fsverity feature bit
      - support lost+found feature
+  * Install the library link files in /usr/lib where they belong
+  * Replace the libf2fs0 package with libf2fs5 and libf2fs-format4
+  * Fixed missing libblkid dependency in the shared library
+  * Updated Standards compliance to 4.2.0
+  * Added Theodore Ts'o as an uploader for the package
 
- -- Theodore Y. Ts'o <tytso@mit.edu>  Fri, 17 Aug 2018 15:30:50 -0400
+ -- Theodore Y. Ts'o <tytso@mit.edu>  Fri, 24 Aug 2018 03:32:49 -0400
 
 f2fs-tools (1.10.0-1) unstable; urgency=medium
 
