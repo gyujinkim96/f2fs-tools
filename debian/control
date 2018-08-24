@@ -6,6 +6,7 @@ Uploaders: Vincent Cheng <vcheng@debian.org>, Theodore Y. Ts'o <tytso@mit.edu>
 Build-Depends:
  debhelper (>= 9),
  dh-autoreconf,
+ libblkid-dev,
  libselinux1-dev,
  pkg-config,
  uuid-dev
