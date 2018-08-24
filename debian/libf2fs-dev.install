@@ -1,4 +1,4 @@
-include/*                        usr/include/f2fs-tools
-usr/lib/*/lib*.a
-usr/lib/*/lib*.so
-mkfs/*.h                         usr/include/f2fs-tools
+usr/include/*			usr/include/f2fs-tools
+include/android_config.h	usr/include/f2fs-tools
+usr/lib/*/libf2fs.a
+usr/lib/*/libf2fs.so
