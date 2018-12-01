@@ -1,0 +1,22 @@
+From: Theodore Ts'o <tytso@mit.edu>
+Date: Fri, 24 Aug 2018 03:16:49 -0400
+Subject: build: declare that libf2fs_format uses the blkid library
+
+Signed-off-by: Theodore Ts'o <tytso@mit.edu>
+---
+ mkfs/Makefile.am | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mkfs/Makefile.am b/mkfs/Makefile.am
+index 32996ba..cae2f93 100644
+--- a/mkfs/Makefile.am
++++ b/mkfs/Makefile.am
+@@ -12,7 +12,7 @@ lib_LTLIBRARIES = libf2fs_format.la
+ libf2fs_format_la_SOURCES = f2fs_format_main.c f2fs_format.c f2fs_format_utils.c
+ libf2fs_format_la_CFLAGS = -DWITH_BLKDISCARD
+ libf2fs_format_la_CPPFLAGS = -I$(top_srcdir)/include
+-libf2fs_format_la_LDFLAGS = -luuid -L$(top_builddir)/lib -lf2fs \
++libf2fs_format_la_LDFLAGS = -lblkid -luuid -L$(top_builddir)/lib -lf2fs \
+ 	-version-info $(FMT_CURRENT):$(FMT_REVISION):$(FMT_AGE)
+ 
+ install-exec-hook:

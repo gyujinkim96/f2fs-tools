@@ -1,0 +1,3 @@
+usr/lib/*/libf2fs_format.a
+usr/lib/*/libf2fs_format.so
+mkfs/*.h                         usr/include/f2fs-tools
