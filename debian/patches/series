@@ -1,4 +1,0 @@
-0001-add-configure-option-with-root-libdir.patch
-0002-Ask-git-to-ignore-the-generated-sg_write_buffer-exec.patch
-0003-build-declare-that-libf2fs_format-uses-the-blkid-lib.patch
-0004-f2fs-tools-Fix-cross-build-problem-caused-by-AC_CHEC.patch
