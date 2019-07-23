@@ -77,6 +77,8 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Depends: libf2fs-format4 (= ${binary:Version}), uuid-dev, ${misc:Depends}
+Breaks: libf2fs-dev (<< 1.11.0-1~)
+Replaces: libf2fs-dev (<< 1.11.0-1~)
 Description: Core library for Flash-Friendly File System - Development files
  F2FS is a new filesystem for Linux aimed at NAND flash memory-based storage
  devices, such as SSD, eMMC, and SD cards. It is based on Log-structured File

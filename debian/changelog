@@ -1,3 +1,12 @@
+f2fs-tools (1.11.0-1.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Fix "missing Breaks+Replaces: libf2fs-dev (<< 1.11)":
+    add them in debian/control, thanks Andreas Beckmann.
+    (Closes: #907975)
+
+ -- gregor herrmann <gregoa@debian.org>  Sat, 01 Dec 2018 11:43:32 +0100
+
 f2fs-tools (1.11.0-1) unstable; urgency=medium
 
   * New upstream release.   (Closes: #904286)
