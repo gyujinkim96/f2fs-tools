@@ -1,3 +1,19 @@
+f2fs-tools (1.12.0-1) unstable; urgency=medium
+
+  * Acknowledge NMU, thanks to Gregor Herrmann
+  * New upstream release (Closes: #896909)
+     - add android default configuration
+     - fix resgid/resuid
+     - add more sanity checks
+     - fix corrupted quota in clean umount
+     - add superblock checksum
+  * Update for new shared library versions: libf2fs6 and libf2fs-format5
+  * Update the debhelper compatibility level to 12
+  * Transition to dbgsym packages
+  * Updated Standards compliance to 4.4.0
+
+ -- Theodore Y. Ts'o <tytso@mit.edu>  Tue, 23 Jul 2019 12:18:55 -0400
+
 f2fs-tools (1.11.0-1.1) unstable; urgency=medium
 
   * Non-maintainer upload.

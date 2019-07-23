@@ -1,8 +1,11 @@
 #!/usr/bin/make -f
 
-DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
-DEB_UPSTREAM_VERSION ?= $(shell dpkg-parsechangelog | \
-			  sed -rne 's,^Version: ([^-]+).*,\1,p')
+# export DH_VERBOSE=1
+
+export DEB_BUILD_MAINT_OPTIONS ?= hardening=+all
+
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/default.mk
 
 %:
 	dh $@ --with autoreconf
@@ -14,15 +17,21 @@ override_dh_auto_configure:
 
 override_dh_install:
 	find $(CURDIR) -name "*.la" -delete
-	dh_install --list-missing
-
-override_dh_strip:
-	dh_strip --dbg-package=f2fs-tools-dbg
+	dh_install
+	dh_missing --fail-missing
 
 get-orig-source:
-	wget http://git.kernel.org/cgit/linux/kernel/git/jaegeuk/f2fs-tools.git/snapshot/f2fs-tools-$(DEB_UPSTREAM_VERSION).tar.xz
-	mv f2fs-tools-$(DEB_UPSTREAM_VERSION).tar.xz f2fs-tools_$(DEB_UPSTREAM_VERSION).orig.tar.xz
+	wget http://git.kernel.org/cgit/linux/kernel/git/jaegeuk/f2fs-tools.git/snapshot/f2fs-tools-$(DEB_VERSION_UPSTREAM).tar.gz
+	gunzip < f2fs-tools-$(DEB_VERSION_UPSTREAM).tar.gz | \
+		xz > f2fs-tools-$(DEB_VERSION_UPSTREAM).tar.xz
+	rm f2fs-tools-$(DEB_VERSION_UPSTREAM).tar.gz
+	mv f2fs-tools-$(DEB_VERSION_UPSTREAM).tar.xz f2fs-tools_$(DEB_VERSION_UPSTREAM).orig.tar.xz
 
-override_dh_shlibdeps:
-	dh_shlibdeps -a -p f2fs-tools-udeb -- -xlibf2fs5 -xlibf2fs-format4
-	dh_shlibdeps -a -N f2fs-tools-udeb
+# dh_dwz when run on f2fs-tools-udeb ends up installing the
+# /usr/lib/debug/.dwz files into the udeb.  I think that's a bug,
+# but for now, override it by just saying... just don't.
+override_dh_dwz:
+	dh_dwz -N f2fs-tools-udeb
+
+test_printenv:
+	printenv | sort

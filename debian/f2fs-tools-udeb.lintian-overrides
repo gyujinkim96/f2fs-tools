@@ -1,1 +1,1 @@
-f2fs-tools-udeb udeb: package-name-doesnt-match-sonames libf2fs5
+f2fs-tools-udeb udeb: package-name-doesnt-match-sonames libf2fs6
