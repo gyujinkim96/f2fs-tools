@@ -18,6 +18,7 @@
 #include "fsck.h"
 #include <libgen.h>
 #include <ctype.h>
+#include <time.h>
 #include <getopt.h>
 #include "quotaio.h"
 
@@ -53,6 +54,7 @@ void fsck_usage()
 	MSG(0, "\nUsage: fsck.f2fs [options] device\n");
 	MSG(0, "[options]:\n");
 	MSG(0, "  -a check/fix potential corruption, reported by f2fs\n");
+	MSG(0, "  -C encoding[:flag1,flag2] Set options for enabling casefolding\n");
 	MSG(0, "  -d debug level [default:0]\n");
 	MSG(0, "  -f check/fix entire partition\n");
 	MSG(0, "  -g add default options\n");
@@ -185,8 +187,9 @@ void f2fs_parse_options(int argc, char *argv[])
 	}
 
 	if (!strcmp("fsck.f2fs", prog)) {
-		const char *option_string = ":ad:fg:O:p:q:StyV";
-		int opt = 0;
+		const char *option_string = ":aC:d:fg:O:p:q:StyV";
+		int opt = 0, val;
+		char *token;
 		struct option long_opt[] = {
 			{"dry-run", no_argument, 0, 1},
 			{0, 0, 0, 0}
@@ -216,6 +219,8 @@ void f2fs_parse_options(int argc, char *argv[])
 				/* preen mode has different levels:
 				 *  0: default level, the same as -a
 				 *  1: check meta
+				 *  2: same as 0, but will skip some
+				 *     check for old kernel
 				 */
 				if (optarg[0] == '-' || !is_digits(optarg) ||
 							optind == argc) {
@@ -230,7 +235,8 @@ void f2fs_parse_options(int argc, char *argv[])
 					c.preen_mode = PREEN_MODE_0;
 				else if (c.preen_mode >= PREEN_MODE_MAX)
 					c.preen_mode = PREEN_MODE_MAX - 1;
-				if (c.preen_mode == PREEN_MODE_0)
+				if (c.preen_mode == PREEN_MODE_0 ||
+					c.preen_mode == PREEN_MODE_2)
 					c.auto_fix = 1;
 				MSG(0, "Info: Fix the reported corruption in "
 					"preen mode %d\n", c.preen_mode);
@@ -249,6 +255,7 @@ void f2fs_parse_options(int argc, char *argv[])
 			case 'f':
 			case 'y':
 				c.fix_on = 1;
+				c.force = 1;
 				MSG(0, "Info: Force to fix corruption\n");
 				break;
 			case 'q':
@@ -272,6 +279,22 @@ void f2fs_parse_options(int argc, char *argv[])
 					err = ENEED_ARG;
 					break;
 				}
+				break;
+			case 'C':
+				token = strtok(optarg, ":");
+				val = f2fs_str2encoding(token);
+				if (val < 0) {
+					MSG(0, "\tError: Unknown encoding %s\n", token);
+					fsck_usage();
+				}
+				c.s_encoding = val;
+				token = strtok(NULL, "");
+				val = f2fs_str2encoding_flags(&token, &c.s_encoding_flags);
+				if (val) {
+					MSG(0, "\tError: Unknown flag %s\n", token);
+					fsck_usage();
+				}
+				c.feature |= cpu_to_le32(F2FS_FEATURE_CASEFOLD);
 				break;
 			case 'V':
 				show_version(prog);
@@ -612,6 +635,8 @@ static void do_fsck(struct f2fs_sb_info *sbi)
 		c.fix_on = 1;
 	}
 
+	fsck_chk_checkpoint(sbi);
+
 	fsck_chk_quota_node(sbi);
 
 	/* Traverse all block recursively from root inode */
@@ -739,6 +764,7 @@ int main(int argc, char **argv)
 {
 	struct f2fs_sb_info *sbi;
 	int ret = 0;
+	clock_t start = clock();
 
 	f2fs_init_configuration();
 
@@ -753,9 +779,13 @@ int main(int argc, char **argv)
 		}
 
 		/* allow ro-mounted partition */
-		MSG(0, "Info: Check FS only due to RO\n");
-		c.fix_on = 0;
-		c.auto_fix = 0;
+		if (c.force) {
+			MSG(0, "Info: Force to check/repair FS on RO mounted device\n");
+		} else {
+			MSG(0, "Info: Check FS only on RO mounted device\n");
+			c.fix_on = 0;
+			c.auto_fix = 0;
+		}
 	}
 
 	/* Get device */
@@ -803,6 +833,10 @@ fsck_again:
 		if (do_sload(sbi))
 			goto out_err;
 
+		ret = f2fs_sparse_initialize_meta(sbi);
+		if (ret < 0)
+			goto out_err;
+
 		f2fs_do_umount(sbi);
 
 		/* fsck to fix missing quota */
@@ -818,7 +852,7 @@ fsck_again:
 	f2fs_do_umount(sbi);
 
 	if (c.func == FSCK && c.bug_on) {
-		if (!c.ro && c.fix_on == 0 && c.auto_fix == 0) {
+		if (!c.ro && c.fix_on == 0 && c.auto_fix == 0 && !c.dry_run) {
 			char ans[255] = {0};
 retry:
 			printf("Do you want to fix this partition? [Y/N] ");
@@ -839,7 +873,7 @@ retry:
 	if (ret < 0)
 		return ret;
 
-	printf("\nDone.\n");
+	printf("\nDone: %lf secs\n", (clock() - start) / (double)CLOCKS_PER_SEC);
 	return 0;
 
 out_err:
