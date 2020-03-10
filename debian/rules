@@ -33,5 +33,8 @@ get-orig-source:
 override_dh_dwz:
 	dh_dwz -N f2fs-tools-udeb
 
+override_dh_makeshlibs:
+	dh_makeshlibs --no-add-udeb
+
 test_printenv:
 	printenv | sort
