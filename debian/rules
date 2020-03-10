@@ -17,6 +17,7 @@ override_dh_auto_configure:
 
 override_dh_install:
 	find $(CURDIR) -name "*.la" -delete
+	rm $(CURDIR)/debian/tmp/sbin/sg_write_buffer
 	dh_install
 	dh_missing --fail-missing
 
