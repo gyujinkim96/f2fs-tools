@@ -499,9 +499,23 @@ opaque_seq:
 	return __f2fs_dentry_hash(name, len);
 }
 
+#define ALIGN_DOWN(addrs, size)		(((addrs) / (size)) * (size))
 unsigned int addrs_per_inode(struct f2fs_inode *i)
 {
-	return CUR_ADDRS_PER_INODE(i) - get_inline_xattr_addrs(i);
+	unsigned int addrs = CUR_ADDRS_PER_INODE(i) - get_inline_xattr_addrs(i);
+
+	if (!LINUX_S_ISREG(le16_to_cpu(i->i_mode)) ||
+			!(le32_to_cpu(i->i_flags) & F2FS_COMPR_FL))
+		return addrs;
+	return ALIGN_DOWN(addrs, 1 << i->i_log_cluster_size);
+}
+
+unsigned int addrs_per_block(struct f2fs_inode *i)
+{
+	if (!LINUX_S_ISREG(le16_to_cpu(i->i_mode)) ||
+			!(le32_to_cpu(i->i_flags) & F2FS_COMPR_FL))
+		return DEF_ADDRS_PER_BLOCK;
+	return ALIGN_DOWN(DEF_ADDRS_PER_BLOCK, 1 << i->i_log_cluster_size);
 }
 
 /*
@@ -655,6 +669,9 @@ void f2fs_init_configuration(void)
 	c.wanted_sector_size = -1;
 #ifndef WITH_ANDROID
 	c.preserve_limits = 1;
+	c.no_kernel_check = 1;
+#else
+	c.no_kernel_check = 0;
 #endif
 
 	for (i = 0; i < MAX_DEVICES; i++) {
@@ -892,7 +909,8 @@ int get_device_info(int i)
 			return -1;
 		}
 
-		if (S_ISBLK(stat_buf->st_mode) && !c.force && c.func != DUMP) {
+		if (S_ISBLK(stat_buf->st_mode) &&
+				!c.force && c.func != DUMP && !c.dry_run) {
 			fd = open(dev->path, O_RDWR | O_EXCL);
 			if (fd < 0)
 				fd = open_check_fs(dev->path, O_EXCL);
@@ -1140,6 +1158,8 @@ int get_device_info(int i)
 	c.sectors_per_blk = F2FS_BLKSIZE / c.sector_size;
 	c.total_sectors += dev->total_sectors;
 
+	if (c.sparse_mode && f2fs_init_sparse_file())
+		return -1;
 	return 0;
 }
 #endif
@@ -1243,6 +1263,8 @@ unsigned int calc_extra_isize(void)
 	if (c.feature & cpu_to_le32(F2FS_FEATURE_INODE_CHKSUM))
 		size = offsetof(struct f2fs_inode, i_crtime);
 	if (c.feature & cpu_to_le32(F2FS_FEATURE_INODE_CRTIME))
+		size = offsetof(struct f2fs_inode, i_compr_blocks);
+	if (c.feature & cpu_to_le32(F2FS_FEATURE_COMPRESSION))
 		size = offsetof(struct f2fs_inode, i_extra_end);
 
 	return size - F2FS_EXTRA_ISIZE_OFFSET;
@@ -1282,6 +1304,17 @@ int f2fs_str2encoding(const char *string)
 			return f2fs_encoding_map[i].encoding_magic;
 
 	return -EINVAL;
+}
+
+char *f2fs_encoding2str(const int encoding)
+{
+	int i;
+
+	for (i = 0 ; i < ARRAY_SIZE(f2fs_encoding_map); i++)
+		if (f2fs_encoding_map[i].encoding_magic == encoding)
+			return f2fs_encoding_map[i].name;
+
+	return NULL;
 }
 
 int f2fs_get_encoding_flags(int encoding)

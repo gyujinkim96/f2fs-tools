@@ -97,8 +97,9 @@ int f2fs_get_zoned_model(int i)
 	/* Check that this is a zoned block device */
 	res = get_sysfs_path(dev, "queue/zoned", str, sizeof(str));
 	if (res != 0) {
-		MSG(0, "\tError: Failed to get device sysfs path\n");
-		return -1;
+		MSG(0, "\tInfo: can't find /sys, assuming normal block device\n");
+		dev->zoned_model = F2FS_ZONED_NONE;
+		return 0;
 	}
 
 	file = fopen(str, "r");
@@ -191,7 +192,87 @@ int f2fs_get_zone_blocks(int i)
 	return 0;
 }
 
+int f2fs_report_zone(int i, u_int64_t sector, void *blkzone)
+{
+	struct blk_zone *blkz = (struct blk_zone *)blkzone;
+	struct blk_zone_report *rep;
+	int ret = -1;
+
+	rep = malloc(sizeof(struct blk_zone_report) + sizeof(struct blk_zone));
+	if (!rep) {
+		ERR_MSG("No memory for report zones\n");
+		return -ENOMEM;
+	}
+
+	rep->sector = sector;
+	rep->nr_zones = 1;
+	ret = ioctl(c.devices[i].fd, BLKREPORTZONE, rep);
+	if (ret != 0) {
+		ret = -errno;
+		ERR_MSG("ioctl BLKREPORTZONE failed: errno=%d\n", errno);
+		goto out;
+	}
+
+	*blkz = *(struct blk_zone *)(rep + 1);
+out:
+	free(rep);
+	return ret;
+}
+
 #define F2FS_REPORT_ZONES_BUFSZ	524288
+
+int f2fs_report_zones(int j, report_zones_cb_t *report_zones_cb, void *opaque)
+{
+	struct device_info *dev = c.devices + j;
+	struct blk_zone_report *rep;
+	struct blk_zone *blkz;
+	unsigned int i, n = 0;
+	u_int64_t total_sectors = (dev->total_sectors * c.sector_size)
+		>> SECTOR_SHIFT;
+	u_int64_t sector = 0;
+	int ret = -1;
+
+	rep = malloc(F2FS_REPORT_ZONES_BUFSZ);
+	if (!rep) {
+		ERR_MSG("No memory for report zones\n");
+		return -ENOMEM;
+	}
+
+	while (sector < total_sectors) {
+
+		/* Get zone info */
+		rep->sector = sector;
+		rep->nr_zones = (F2FS_REPORT_ZONES_BUFSZ - sizeof(struct blk_zone_report))
+			/ sizeof(struct blk_zone);
+
+		ret = ioctl(dev->fd, BLKREPORTZONE, rep);
+		if (ret != 0) {
+			ret = -errno;
+			ERR_MSG("ioctl BLKREPORTZONE failed: errno=%d\n",
+				errno);
+			goto out;
+		}
+
+		if (!rep->nr_zones) {
+			ret = -EIO;
+			ERR_MSG("Unexpected ioctl BLKREPORTZONE result\n");
+			goto out;
+		}
+
+		blkz = (struct blk_zone *)(rep + 1);
+		for (i = 0; i < rep->nr_zones; i++) {
+			ret = report_zones_cb(n, blkz, opaque);
+			if (ret)
+				goto out;
+			sector = blk_zone_sector(blkz) + blk_zone_length(blkz);
+			n++;
+			blkz++;
+		}
+	}
+out:
+	free(rep);
+	return ret;
+}
 
 int f2fs_check_zones(int j)
 {
@@ -209,6 +290,13 @@ int f2fs_check_zones(int j)
 		ERR_MSG("No memory for report zones\n");
 		return -ENOMEM;
 	}
+
+	dev->zone_cap_blocks = malloc(dev->nr_zones * sizeof(size_t));
+	if (!dev->zone_cap_blocks) {
+		ERR_MSG("No memory for zone capacity list.\n");
+		return -ENOMEM;
+	}
+	memset(dev->zone_cap_blocks, 0, (dev->nr_zones * sizeof(size_t)));
 
 	dev->nr_rnd_zones = 0;
 	sector = 0;
@@ -254,10 +342,15 @@ int f2fs_check_zones(int j)
 				    blk_zone_cond_str(blkz),
 				    blk_zone_sector(blkz),
 				    blk_zone_length(blkz));
+				dev->zone_cap_blocks[n] =
+					blk_zone_length(blkz) >>
+					(F2FS_BLKSIZE_BITS - SECTOR_SHIFT);
 			} else {
 				DBG(2,
-				    "Zone %05u: type 0x%x (%s), cond 0x%x (%s), need_reset %d, "
-				    "non_seq %d, sector %llu, %llu sectors, wp sector %llu\n",
+				    "Zone %05u: type 0x%x (%s), cond 0x%x (%s),"
+				    " need_reset %d, non_seq %d, sector %llu,"
+				    " %llu sectors, capacity %llu,"
+				    " wp sector %llu\n",
 				    n,
 				    blk_zone_type(blkz),
 				    blk_zone_type_str(blkz),
@@ -267,7 +360,11 @@ int f2fs_check_zones(int j)
 				    blk_zone_non_seq(blkz),
 				    blk_zone_sector(blkz),
 				    blk_zone_length(blkz),
+				    blk_zone_capacity(blkz, rep->flags),
 				    blk_zone_wp_sector(blkz));
+				dev->zone_cap_blocks[n] =
+					blk_zone_capacity(blkz, rep->flags) >>
+					(F2FS_BLKSIZE_BITS - SECTOR_SHIFT);
 			}
 
 			sector = blk_zone_sector(blkz) + blk_zone_length(blkz);
@@ -305,6 +402,28 @@ int f2fs_check_zones(int j)
 	}
 out:
 	free(rep);
+	return ret;
+}
+
+int f2fs_reset_zone(int i, void *blkzone)
+{
+	struct blk_zone *blkz = (struct blk_zone *)blkzone;
+	struct device_info *dev = c.devices + i;
+	struct blk_zone_range range;
+	int ret;
+
+	if (!blk_zone_seq(blkz) || blk_zone_empty(blkz))
+		return 0;
+
+	/* Non empty sequential zone: reset */
+	range.sector = blk_zone_sector(blkz);
+	range.nr_sectors = blk_zone_length(blkz);
+	ret = ioctl(dev->fd, BLKRESETZONE, &range);
+	if (ret != 0) {
+		ret = -errno;
+		ERR_MSG("ioctl BLKRESETZONE failed: errno=%d\n", errno);
+	}
+
 	return ret;
 }
 
@@ -370,7 +489,48 @@ out:
 	return ret;
 }
 
+uint32_t f2fs_get_usable_segments(struct f2fs_super_block *sb)
+{
+#ifdef HAVE_BLK_ZONE_REP_V2
+	int i, j;
+	uint32_t usable_segs = 0, zone_segs;
+
+	for (i = 0; i < c.ndevs; i++) {
+		if (c.devices[i].zoned_model != F2FS_ZONED_HM) {
+			usable_segs += c.devices[i].total_segments;
+			continue;
+		}
+		for (j = 0; j < c.devices[i].nr_zones; j++) {
+			zone_segs = c.devices[i].zone_cap_blocks[j] >>
+					get_sb(log_blocks_per_seg);
+			if (c.devices[i].zone_cap_blocks[j] %
+						DEFAULT_BLOCKS_PER_SEGMENT)
+				usable_segs += zone_segs + 1;
+			else
+				usable_segs += zone_segs;
+		}
+	}
+	usable_segs -= (get_sb(main_blkaddr) - get_sb(segment0_blkaddr)) >>
+						get_sb(log_blocks_per_seg);
+	return usable_segs;
+#endif
+	return get_sb(segment_count_main);
+}
+
 #else
+
+int f2fs_report_zone(int i, u_int64_t UNUSED(sector), void *UNUSED(blkzone))
+{
+	ERR_MSG("%d: Unsupported zoned block device\n", i);
+	return -1;
+}
+
+int f2fs_report_zones(int i, report_zones_cb_t *UNUSED(report_zones_cb),
+					void *UNUSED(opaque))
+{
+	ERR_MSG("%d: Unsupported zoned block device\n", i);
+	return -1;
+}
 
 int f2fs_get_zoned_model(int i)
 {
@@ -395,15 +555,25 @@ int f2fs_get_zone_blocks(int i)
 
 int f2fs_check_zones(int i)
 {
-	ERR_MSG("%d: Zoned block devices are not supported\n", i);
+	ERR_MSG("%d: Unsupported zoned block device\n", i);
+	return -1;
+}
+
+int f2fs_reset_zone(int i, void *UNUSED(blkzone))
+{
+	ERR_MSG("%d: Unsupported zoned block device\n", i);
 	return -1;
 }
 
 int f2fs_reset_zones(int i)
 {
-	ERR_MSG("%d: Zoned block devices are not supported\n", i);
+	ERR_MSG("%d: Unsupported zoned block device\n", i);
 	return -1;
 }
 
+uint32_t f2fs_get_usable_segments(struct f2fs_super_block *sb)
+{
+	return get_sb(segment_count_main);
+}
 #endif
 

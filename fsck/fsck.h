@@ -13,6 +13,17 @@
 
 #include "f2fs.h"
 
+enum {
+	FSCK_SUCCESS                 = 0,
+	FSCK_ERROR_CORRECTED         = 1 << 0,
+	FSCK_SYSTEM_SHOULD_REBOOT    = 1 << 1,
+	FSCK_ERRORS_LEFT_UNCORRECTED = 1 << 2,
+	FSCK_OPERATIONAL_ERROR       = 1 << 3,
+	FSCK_USAGE_OR_SYNTAX_ERROR   = 1 << 4,
+	FSCK_USER_CANCELLED          = 1 << 5,
+	FSCK_SHARED_LIB_ERROR        = 1 << 7,
+};
+
 struct quota_ctx;
 
 #define FSCK_UNMATCHED_EXTENT		0x00000001
@@ -80,6 +91,8 @@ struct f2fs_fsck {
 		u32 multi_hard_link_files;
 		u64 sit_valid_blocks;
 		u32 sit_free_segs;
+		u32 wp_fixed;
+		u32 wp_inconsistent_zones;
 	} chk;
 
 	struct hard_link_node *hard_link_list_head;
@@ -133,9 +146,18 @@ enum seg_type {
 
 struct selabel_handle;
 
+static inline bool need_fsync_data_record(struct f2fs_sb_info *sbi)
+{
+	return !is_set_ckpt_flags(F2FS_CKPT(sbi), CP_UMOUNT_FLAG) ||
+		c.zoned_model == F2FS_ZONED_HM;
+}
+
 extern int fsck_chk_orphan_node(struct f2fs_sb_info *);
 extern int fsck_chk_quota_node(struct f2fs_sb_info *);
 extern int fsck_chk_quota_files(struct f2fs_sb_info *);
+extern int fsck_sanity_check_nid(struct f2fs_sb_info *, u32,
+			struct f2fs_node *, enum FILE_TYPE, enum NODE_TYPE,
+			struct node_info *);
 extern int fsck_chk_node_blk(struct f2fs_sb_info *, struct f2fs_inode *, u32,
 		enum FILE_TYPE, enum NODE_TYPE, u32 *,
 		struct child_info *);
@@ -156,6 +178,7 @@ int fsck_chk_inline_dentries(struct f2fs_sb_info *, struct f2fs_node *,
 		struct child_info *);
 void fsck_chk_checkpoint(struct f2fs_sb_info *sbi);
 int fsck_chk_meta(struct f2fs_sb_info *sbi);
+void fsck_chk_and_fix_write_pointers(struct f2fs_sb_info *);
 int fsck_chk_curseg_info(struct f2fs_sb_info *);
 void pretty_print_filename(const u8 *raw_name, u32 len,
 			   char out[F2FS_PRINT_NAMELEN], int enc_name);
@@ -191,7 +214,7 @@ extern void zero_journal_entries(struct f2fs_sb_info *);
 extern void flush_sit_entries(struct f2fs_sb_info *);
 extern void move_curseg_info(struct f2fs_sb_info *, u64, int);
 extern void write_curseg_info(struct f2fs_sb_info *);
-extern int find_next_free_block(struct f2fs_sb_info *, u64 *, int, int);
+extern int find_next_free_block(struct f2fs_sb_info *, u64 *, int, int, bool);
 extern void duplicate_checkpoint(struct f2fs_sb_info *);
 extern void write_checkpoint(struct f2fs_sb_info *);
 extern void write_checkpoints(struct f2fs_sb_info *);
@@ -212,6 +235,8 @@ extern u32 update_nat_bits_flags(struct f2fs_super_block *,
 				struct f2fs_checkpoint *, u32);
 extern void write_nat_bits(struct f2fs_sb_info *, struct f2fs_super_block *,
 			struct f2fs_checkpoint *, int);
+extern unsigned int get_usable_seg_count(struct f2fs_sb_info *);
+extern bool is_usable_seg(struct f2fs_sb_info *, unsigned int);
 
 /* dump.c */
 struct dump_option {
@@ -254,6 +279,8 @@ block_t new_node_block(struct f2fs_sb_info *,
 					struct dnode_of_data *, unsigned int);
 
 /* segment.c */
+struct quota_file;
+u64 f2fs_quota_size(struct quota_file *);
 u64 f2fs_read(struct f2fs_sb_info *, nid_t, u8 *, u64, pgoff_t);
 u64 f2fs_write(struct f2fs_sb_info *, nid_t, u8 *, u64, pgoff_t);
 void f2fs_filesize_update(struct f2fs_sb_info *, nid_t, u64);

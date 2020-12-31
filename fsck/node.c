@@ -79,6 +79,7 @@ block_t new_node_block(struct f2fs_sb_info *sbi,
 	node_blk->footer.ino = f2fs_inode->footer.ino;
 	node_blk->footer.flag = cpu_to_le32(ofs << OFFSET_BIT_SHIFT);
 	node_blk->footer.cp_ver = ckpt->checkpoint_ver;
+	set_cold_node(node_blk, S_ISDIR(le16_to_cpu(f2fs_inode->i.i_mode)));
 
 	type = CURSEG_COLD_NODE;
 	if (IS_DNODE(node_blk)) {
@@ -117,9 +118,9 @@ static int get_node_path(struct f2fs_node *node, long block,
 				int offset[4], unsigned int noffset[4])
 {
 	const long direct_index = ADDRS_PER_INODE(&node->i);
-	const long direct_blks = ADDRS_PER_BLOCK;
+	const long direct_blks = ADDRS_PER_BLOCK(&node->i);
 	const long dptrs_per_blk = NIDS_PER_BLOCK;
-	const long indirect_blks = ADDRS_PER_BLOCK * NIDS_PER_BLOCK;
+	const long indirect_blks = ADDRS_PER_BLOCK(&node->i) * NIDS_PER_BLOCK;
 	const long dindirect_blks = indirect_blks * NIDS_PER_BLOCK;
 	int n = 0;
 	int level = 0;

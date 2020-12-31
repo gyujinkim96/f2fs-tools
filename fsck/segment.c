@@ -15,6 +15,7 @@
  */
 #include "fsck.h"
 #include "node.h"
+#include "quotaio.h"
 
 int reserve_new_block(struct f2fs_sb_info *sbi, block_t *to,
 			struct f2fs_summary *sum, int type, bool is_inode)
@@ -52,7 +53,7 @@ int reserve_new_block(struct f2fs_sb_info *sbi, block_t *to,
 
 	blkaddr = SM_I(sbi)->main_blkaddr;
 
-	if (find_next_free_block(sbi, &blkaddr, 0, type)) {
+	if (find_next_free_block(sbi, &blkaddr, 0, type, false)) {
 		ERR_MSG("Can't find free block");
 		ASSERT(0);
 	}
@@ -62,7 +63,7 @@ int reserve_new_block(struct f2fs_sb_info *sbi, block_t *to,
 	se->type = type;
 	se->valid_blocks++;
 	f2fs_set_bit(offset, (char *)se->cur_valid_map);
-	if (!is_set_ckpt_flags(F2FS_CKPT(sbi), CP_UMOUNT_FLAG)) {
+	if (need_fsync_data_record(sbi)) {
 		se->ckpt_type = type;
 		se->ckpt_valid_blocks++;
 		f2fs_set_bit(offset, (char *)se->ckpt_valid_map);
@@ -124,6 +125,25 @@ int new_data_block(struct f2fs_sb_info *sbi, void *block,
 	return 0;
 }
 
+u64 f2fs_quota_size(struct quota_file *qf)
+{
+	struct node_info ni;
+	struct f2fs_node *inode;
+	u64 filesize;
+
+	inode = (struct f2fs_node *) calloc(BLOCK_SZ, 1);
+	ASSERT(inode);
+
+	/* Read inode */
+	get_node_info(qf->sbi, qf->ino, &ni);
+	ASSERT(dev_read_block(inode, ni.blk_addr) >= 0);
+	ASSERT(S_ISREG(le16_to_cpu(inode->i.i_mode)));
+
+	filesize = le64_to_cpu(inode->i.i_size);
+	free(inode);
+	return filesize;
+}
+
 u64 f2fs_read(struct f2fs_sb_info *sbi, nid_t ino, u8 *buffer,
 					u64 count, pgoff_t offset)
 {
@@ -170,7 +190,8 @@ u64 f2fs_read(struct f2fs_sb_info *sbi, nid_t ino, u8 *buffer,
 				free(index_node);
 			index_node = (dn.node_blk == dn.inode_blk) ?
 							NULL : dn.node_blk;
-			remained_blkentries = ADDRS_PER_PAGE(dn.node_blk);
+			remained_blkentries = ADDRS_PER_PAGE(sbi,
+						dn.node_blk, dn.inode_blk);
 		}
 		ASSERT(remained_blkentries > 0);
 
@@ -248,7 +269,8 @@ u64 f2fs_write(struct f2fs_sb_info *sbi, nid_t ino, u8 *buffer,
 				free(index_node);
 			index_node = (dn.node_blk == dn.inode_blk) ?
 							NULL : dn.node_blk;
-			remained_blkentries = ADDRS_PER_PAGE(dn.node_blk);
+			remained_blkentries = ADDRS_PER_PAGE(sbi,
+						dn.node_blk, dn.inode_blk);
 		}
 		ASSERT(remained_blkentries > 0);
 

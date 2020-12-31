@@ -10,6 +10,9 @@
  *   Liu Shuoran <liushuoran@huawei.com>
  *   Jaegeuk Kim <jaegeuk@kernel.org>
  *  : add sload.f2fs
+ * Copyright (c) 2019 Google Inc.
+ *   Robin Hsu <robinhsu@google.com>
+ *  : add cache layer
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -20,6 +23,7 @@
 #include <ctype.h>
 #include <time.h>
 #include <getopt.h>
+#include <stdbool.h>
 #include "quotaio.h"
 
 struct f2fs_fsck gfsck;
@@ -54,7 +58,12 @@ void fsck_usage()
 	MSG(0, "\nUsage: fsck.f2fs [options] device\n");
 	MSG(0, "[options]:\n");
 	MSG(0, "  -a check/fix potential corruption, reported by f2fs\n");
-	MSG(0, "  -C encoding[:flag1,flag2] Set options for enabling casefolding\n");
+	MSG(0, "  -c <num-cache-entry>  set number of cache entries"
+			" (default 0)\n");
+	MSG(0, "  -m <max-hash-collision>  set max cache hash collision"
+			" (default 16)\n");
+	MSG(0, "  -C encoding[:flag1,flag2] Set options for enabling"
+			" casefolding\n");
 	MSG(0, "  -d debug level [default:0]\n");
 	MSG(0, "  -f check/fix entire partition\n");
 	MSG(0, "  -g add default options\n");
@@ -66,6 +75,9 @@ void fsck_usage()
 	MSG(0, "  -y fix all the time\n");
 	MSG(0, "  -V print the version number and exit\n");
 	MSG(0, "  --dry-run do not really fix corruptions\n");
+	MSG(0, "  --no-kernel-check skips detecting kernel change\n");
+	MSG(0, "  --kernel-check checks kernel change\n");
+	MSG(0, "  --debug-cache to debug cache when -c is used\n");
 	exit(1);
 }
 
@@ -104,6 +116,7 @@ void resize_usage()
 	MSG(0, "\nUsage: resize.f2fs [options] device\n");
 	MSG(0, "[options]:\n");
 	MSG(0, "  -d debug level [default:0]\n");
+	MSG(0, "  -i extended node bitmap, node ratio is 20%% by default\n");
 	MSG(0, "  -s safe resize (Does not resize metadata)");
 	MSG(0, "  -t target sectors [default: device size]\n");
 	MSG(0, "  -V print the version number and exit\n");
@@ -187,15 +200,20 @@ void f2fs_parse_options(int argc, char *argv[])
 	}
 
 	if (!strcmp("fsck.f2fs", prog)) {
-		const char *option_string = ":aC:d:fg:O:p:q:StyV";
+		const char *option_string = ":aC:c:m:d:fg:O:p:q:StyV";
 		int opt = 0, val;
 		char *token;
 		struct option long_opt[] = {
 			{"dry-run", no_argument, 0, 1},
+			{"no-kernel-check", no_argument, 0, 2},
+			{"kernel-check", no_argument, 0, 3},
+			{"debug-cache", no_argument, 0, 4},
 			{0, 0, 0, 0}
 		};
 
 		c.func = FSCK;
+		c.cache_config.max_hash_collision = 16;
+		c.cache_config.dbg_en = false;
 		while ((option = getopt_long(argc, argv, option_string,
 						long_opt, &opt)) != EOF) {
 			switch (option) {
@@ -203,9 +221,27 @@ void f2fs_parse_options(int argc, char *argv[])
 				c.dry_run = 1;
 				MSG(0, "Info: Dry run\n");
 				break;
+			case 2:
+				c.no_kernel_check = 1;
+				MSG(0, "Info: No Kernel Check\n");
+				break;
+			case 3:
+				c.no_kernel_check = 0;
+				MSG(0, "Info: Do Kernel Check\n");
+				break;
+			case 4:
+				c.cache_config.dbg_en = true;
+				break;
 			case 'a':
 				c.auto_fix = 1;
 				MSG(0, "Info: Fix the reported corruption.\n");
+				break;
+			case 'c':
+				c.cache_config.num_cache_entry = atoi(optarg);
+				break;
+			case 'm':
+				c.cache_config.max_hash_collision =
+						atoi(optarg);
 				break;
 			case 'g':
 				if (!strcmp(optarg, "android"))
@@ -449,7 +485,7 @@ void f2fs_parse_options(int argc, char *argv[])
 				break;
 		}
 	} else if (!strcmp("resize.f2fs", prog)) {
-		const char *option_string = "d:st:V";
+		const char *option_string = "d:st:iV";
 
 		c.func = RESIZE;
 		while ((option = getopt(argc, argv, option_string)) != EOF) {
@@ -475,6 +511,9 @@ void f2fs_parse_options(int argc, char *argv[])
 				else
 					ret = sscanf(optarg, "%"PRIx64"",
 							&c.target_sectors);
+				break;
+			case 'i':
+				c.large_nat_bitmap = 1;
 				break;
 			case 'V':
 				show_version(prog);
@@ -591,7 +630,7 @@ void f2fs_parse_options(int argc, char *argv[])
 	error_out(prog);
 }
 
-static void do_fsck(struct f2fs_sb_info *sbi)
+static int do_fsck(struct f2fs_sb_info *sbi)
 {
 	struct f2fs_checkpoint *ckpt = F2FS_CKPT(sbi);
 	u32 flag = le32_to_cpu(ckpt->ckpt_flags);
@@ -601,6 +640,8 @@ static void do_fsck(struct f2fs_sb_info *sbi)
 	fsck_init(sbi);
 
 	print_cp_state(flag);
+
+	fsck_chk_and_fix_write_pointers(sbi);
 
 	fsck_chk_curseg_info(sbi);
 
@@ -614,7 +655,7 @@ static void do_fsck(struct f2fs_sb_info *sbi)
 			} else {
 				MSG(0, "[FSCK] F2FS metadata   [Ok..]");
 				fsck_free(sbi);
-				return;
+				return FSCK_SUCCESS;
 			}
 
 			if (!c.ro)
@@ -646,7 +687,7 @@ static void do_fsck(struct f2fs_sb_info *sbi)
 		ret = quota_init_context(sbi);
 		if (ret) {
 			ASSERT_MSG("quota_init_context failure: %d", ret);
-			return;
+			return FSCK_OPERATIONAL_ERROR;
 		}
 	}
 	fsck_chk_orphan_node(sbi);
@@ -654,8 +695,14 @@ static void do_fsck(struct f2fs_sb_info *sbi)
 			F2FS_FT_DIR, TYPE_INODE, &blk_cnt, NULL);
 	fsck_chk_quota_files(sbi);
 
-	fsck_verify(sbi);
+	ret = fsck_verify(sbi);
 	fsck_free(sbi);
+
+	if (!c.bug_on)
+		return FSCK_SUCCESS;
+	if (!ret)
+		return FSCK_ERROR_CORRECTED;
+	return FSCK_ERRORS_LEFT_UNCORRECTED;
 }
 
 static void do_dump(struct f2fs_sb_info *sbi)
@@ -760,22 +807,48 @@ static int do_sload(struct f2fs_sb_info *sbi)
 	return f2fs_sload(sbi);
 }
 
+#if defined(__APPLE__)
+static u64 get_boottime_ns()
+{
+#ifdef HAVE_MACH_TIME_H
+	return mach_absolute_time();
+#else
+	return 0;
+#endif
+}
+#else
+static u64 get_boottime_ns()
+{
+	struct timespec t;
+	t.tv_sec = t.tv_nsec = 0;
+	clock_gettime(CLOCK_BOOTTIME, &t);
+	return (u64)t.tv_sec * 1000000000LL + t.tv_nsec;
+}
+#endif
+
 int main(int argc, char **argv)
 {
 	struct f2fs_sb_info *sbi;
-	int ret = 0;
-	clock_t start = clock();
+	int ret = 0, ret2;
+	u64 start = get_boottime_ns();
 
 	f2fs_init_configuration();
 
 	f2fs_parse_options(argc, argv);
 
 	if (c.func != DUMP && f2fs_devs_are_umounted() < 0) {
-		if (errno == EBUSY)
-			return -1;
+		if (errno == EBUSY) {
+			ret = -1;
+			if (c.func == FSCK)
+				ret = FSCK_OPERATIONAL_ERROR;
+			goto quick_err;
+		}
 		if (!c.ro || c.func == DEFRAG) {
 			MSG(0, "\tError: Not available on mounted device!\n");
-			return -1;
+			ret = -1;
+			if (c.func == FSCK)
+				ret = FSCK_OPERATIONAL_ERROR;
+			goto quick_err;
 		}
 
 		/* allow ro-mounted partition */
@@ -789,8 +862,12 @@ int main(int argc, char **argv)
 	}
 
 	/* Get device */
-	if (f2fs_get_device_info() < 0)
-		return -1;
+	if (f2fs_get_device_info() < 0) {
+		ret = -1;
+		if (c.func == FSCK)
+			ret = FSCK_OPERATIONAL_ERROR;
+		goto quick_err;
+	}
 
 fsck_again:
 	memset(&gfsck, 0, sizeof(gfsck));
@@ -808,7 +885,7 @@ fsck_again:
 
 	switch (c.func) {
 	case FSCK:
-		do_fsck(sbi);
+		ret = do_fsck(sbi);
 		break;
 #ifdef WITH_DUMP
 	case DUMP:
@@ -856,8 +933,8 @@ fsck_again:
 			char ans[255] = {0};
 retry:
 			printf("Do you want to fix this partition? [Y/N] ");
-			ret = scanf("%s", ans);
-			ASSERT(ret >= 0);
+			ret2 = scanf("%s", ans);
+			ASSERT(ret2 >= 0);
 			if (!strcasecmp(ans, "y"))
 				c.fix_on = 1;
 			else if (!strcasecmp(ans, "n"))
@@ -869,17 +946,22 @@ retry:
 				goto fsck_again;
 		}
 	}
-	ret = f2fs_finalize_device();
-	if (ret < 0)
-		return ret;
+	ret2 = f2fs_finalize_device();
+	if (ret2) {
+		if (c.func == FSCK)
+			return FSCK_OPERATIONAL_ERROR;
+		return ret2;
+	}
 
-	printf("\nDone: %lf secs\n", (clock() - start) / (double)CLOCKS_PER_SEC);
-	return 0;
+	printf("\nDone: %lf secs\n", (get_boottime_ns() - start) / 1000000000.0);
+	return ret;
 
 out_err:
 	if (sbi->ckpt)
 		free(sbi->ckpt);
 	if (sbi->raw_super)
 		free(sbi->raw_super);
+quick_err:
+	f2fs_release_sparse_resource();
 	return ret;
 }
