@@ -21,6 +21,9 @@ override_dh_install:
 	dh_install
 	dh_missing --fail-missing
 
+override_dh_strip:
+	dh_strip --dbgsym-migration='f2fs-tools-dbg (<< 1.12.0-1~)'
+
 get-orig-source:
 	wget http://git.kernel.org/cgit/linux/kernel/git/jaegeuk/f2fs-tools.git/snapshot/f2fs-tools-$(DEB_VERSION_UPSTREAM).tar.gz
 	gunzip < f2fs-tools-$(DEB_VERSION_UPSTREAM).tar.gz | \
