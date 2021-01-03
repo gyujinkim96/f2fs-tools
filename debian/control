@@ -16,30 +16,17 @@ Vcs-Git: https://salsa.debian.org/debian/f2fs-tools.git
 
 Package: f2fs-tools
 Architecture: linux-any
-Depends: libf2fs7 (= ${binary:Version}), libf2fs-format6 (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: Tools for Flash-Friendly File System
  F2FS is a new filesystem for Linux aimed at NAND flash memory-based storage
  devices, such as SSD, eMMC, and SD cards. It is based on Log-structured File
  System (LFS).
 
-Package: libf2fs7
-Section: libs
-Architecture: linux-any
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: Core library for Flash-Friendly File System
- F2FS is a new filesystem for Linux aimed at NAND flash memory-based storage
- devices, such as SSD, eMMC, and SD cards. It is based on Log-structured File
- System (LFS).
- .
- This package contains the core f2fs library.
-
 Package: libf2fs-dev
 Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
-Depends: libf2fs7 (= ${binary:Version}), uuid-dev, ${misc:Depends}
+Depends: uuid-dev, ${misc:Depends}
 Description: Core library for Flash-Friendly File System - Development files
  F2FS is a new filesystem for Linux aimed at NAND flash memory-based storage
  devices, such as SSD, eMMC, and SD cards. It is based on Log-structured File
@@ -47,24 +34,11 @@ Description: Core library for Flash-Friendly File System - Development files
  .
  This package contains the development files.
 
-Package: libf2fs-format6
-Section: libs
-Architecture: linux-any
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: Format library for Flash-Friendly File System
- F2FS is a new filesystem for Linux aimed at NAND flash memory-based storage
- devices, such as SSD, eMMC, and SD cards. It is based on Log-structured File
- System (LFS).
- .
- This package contains the format f2fs library.
-
 Package: libf2fs-format-dev
 Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
-Depends: libf2fs-format6 (= ${binary:Version}), uuid-dev, ${misc:Depends}
+Depends: uuid-dev, ${misc:Depends}
 Breaks: libf2fs-dev (<< 1.11.0-1~)
 Replaces: libf2fs-dev (<< 1.11.0-1~)
 Description: Core library for Flash-Friendly File System - Development files

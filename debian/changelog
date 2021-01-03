@@ -1,6 +1,21 @@
+f2fs-tools (1.14.0-1) unstable; urgency=medium
+
+  * New upstream release (Closes: #973380, #970176)
+     - add IO cache to speed up fsck.f2fs run
+     - support casefolding
+     - support data compression
+     - support zns zone-capacity
+     - enhance fsck.f2fs for zoned device
+     - enhance f2fs_io tool
+  * NMU acknowledge (for 1.11.0-1.2), thanks to Paul Gevers
+  * Dropped shared library packages since upstream is not capable of
+    maintaining a stable ABI
+
+ -- Theodore Y. Ts'o <tytso@mit.edu>  Wed, 30 Dec 2020 22:25:08 -0500
+
 f2fs-tools (1.13.0-1) unstable; urgency=medium
 
-  * New upstream release
+  * New upstream release (Closes: #970941)
      - enable VERITY by default on Android
      - introduce some preen mode in fsck.f2fs
      - add f2fs_io tool
@@ -30,6 +45,14 @@ f2fs-tools (1.12.0-1) unstable; urgency=medium
   * Updated Standards compliance to 4.4.0
 
  -- Theodore Y. Ts'o <tytso@mit.edu>  Tue, 23 Jul 2019 12:18:55 -0400
+
+f2fs-tools (1.11.0-1.2) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Fix FTBFS caused by dh_makeshlibs 12.3 trying to add an shlibs line
+    for f2fs-tools-udeb (Closes: #952318)
+
+ -- Paul Gevers <elbrus@debian.org>  Mon, 21 Dec 2020 21:03:55 +0100
 
 f2fs-tools (1.11.0-1.1) unstable; urgency=medium
 
