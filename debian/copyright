@@ -1,7 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: f2fs-progs
-Upstream-Contact: Jaegeuk Kim <jaegeuk.kim@samsung.com>
-Source: http://git.kernel.org/cgit/linux/kernel/git/jaegeuk/f2fs-tools.git
+Upstream-Name: f2fs-tools
+Upstream-Contact: linux-f2fs-devel@lists.sourceforge.net
+Source: https://git.kernel.org/pub/scm/linux/kernel/git/jaegeuk/f2fs-tools.git
 
 Files: *
 Copyright: 1997 Kaz Kylheku <kaz@ashi.footprints.net>
