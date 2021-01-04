@@ -1,3 +1,19 @@
+f2fs-tools (1.14.0-2) unstable; urgency=medium
+
+  * Update debian/watch to use a version 4 git matching rule
+  * Update URL and contact emails, and other upstream metadata in
+    debian/copyright, debian/control.
+  * Add a debian/upstream/metadata file
+  * Remove no longer needed "--with autoreconf" when running debhelper
+  * Add dbgsym-migration for smooth upgrade from Debian system
+  * Update debian/copyright to reflect new source files in f2fs-tools 1.14
+  * Use a build-depends field in the control file to indicate the
+    debhelper compat level in use by the package
+  * Improve package descriptions for libf2fs-dev and libf2fs-format-dev
+  * Updated Standards compliance to 4.5.1
+
+ -- Theodore Y. Ts'o <tytso@mit.edu>  Sun, 03 Jan 2021 21:08:18 -0500
+
 f2fs-tools (1.14.0-1) unstable; urgency=medium
 
   * New upstream release (Closes: #973380, #970176)
