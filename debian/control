@@ -33,7 +33,7 @@ Description: Core library for Flash-Friendly File System - Development files
  devices, such as SSD, eMMC, and SD cards. It is based on Log-structured File
  System (LFS).
  .
- This package contains the development files.
+ This package contains the development files for the libf2fs library.
 
 Package: libf2fs-format-dev
 Section: libdevel
@@ -42,12 +42,12 @@ Multi-Arch: same
 Depends: uuid-dev, ${misc:Depends}
 Breaks: libf2fs-dev (<< 1.11.0-1~)
 Replaces: libf2fs-dev (<< 1.11.0-1~)
-Description: Core library for Flash-Friendly File System - Development files
+Description: Format library for Flash-Friendly File System - Development files
  F2FS is a new filesystem for Linux aimed at NAND flash memory-based storage
  devices, such as SSD, eMMC, and SD cards. It is based on Log-structured File
  System (LFS).
  .
- This package contains the development files.
+ This package contains the development files for the libf2fs-format library.
 
 Package: f2fs-tools-udeb
 Package-Type: udeb
