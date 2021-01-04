@@ -1,3 +1,9 @@
+f2fs-tools (1.14.0-3) UNRELEASED; urgency=medium
+
+  * Don't use TAB characters to start a continuation line
+
+ -- Theodore Y. Ts'o <tytso@mit.edu>  Sun, 03 Jan 2021 21:57:47 -0500
+
 f2fs-tools (1.14.0-2) unstable; urgency=medium
 
   * Update debian/watch to use a version 4 git matching rule

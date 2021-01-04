@@ -5,12 +5,12 @@ Source: https://git.kernel.org/pub/scm/linux/kernel/git/jaegeuk/f2fs-tools.git
 
 Files: *
 Copyright: 1997 Kaz Kylheku <kaz@ashi.footprints.net>
-	   2012, 2013 Samsung Electronics Co., Ltd.
-	   2014 SGI.
-	   2014 Motorola Mobility
-	   2014 Jaegeuk Kim <jaegeuk@kernel.org>
-	   2015 Huawei Ltd.
-	   2018 Collabora Ltd.
+        2012, 2013 Samsung Electronics Co., Ltd.
+        2014 SGI.
+        2014 Motorola Mobility
+        2014 Jaegeuk Kim <jaegeuk@kernel.org>
+        2015 Huawei Ltd.
+        2018 Collabora Ltd.
 License: GPL-2
 
 Files: include/f2fs_fs.h
@@ -24,10 +24,10 @@ License: GPL-2 or LGPL-2
 
 Files: tools/sg_write_buffer/*
 Copyright: 1999-2018 Douglas Gilbert.
-	   2006-2018 Luben Tuikov
-	   2011-2015 Intel Corporation.
-	   1993, 1994 1995 Eric Youngdale
-	   2017 Western Digital Corporation
+        2006-2018 Luben Tuikov
+        2011-2015 Intel Corporation.
+        1993, 1994 1995 Eric Youngdale
+        2017 Western Digital Corporation
 License: BSD-2-clause
 
 Files: debian/*
