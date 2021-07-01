@@ -19,13 +19,6 @@ execute_before_dh_install:
 	find -name "*.la" -delete
 	rm debian/tmp/sbin/sg_write_buffer
 
-get-orig-source:
-	wget http://git.kernel.org/cgit/linux/kernel/git/jaegeuk/f2fs-tools.git/snapshot/f2fs-tools-$(DEB_VERSION_UPSTREAM).tar.gz
-	gunzip < f2fs-tools-$(DEB_VERSION_UPSTREAM).tar.gz | \
-		xz > f2fs-tools-$(DEB_VERSION_UPSTREAM).tar.xz
-	rm f2fs-tools-$(DEB_VERSION_UPSTREAM).tar.gz
-	mv f2fs-tools-$(DEB_VERSION_UPSTREAM).tar.xz f2fs-tools_$(DEB_VERSION_UPSTREAM).orig.tar.xz
-
 # dh_dwz when run on f2fs-tools-udeb ends up installing the
 # /usr/lib/debug/.dwz files into the udeb.  I think that's a bug,
 # but for now, override it by just saying... just don't.
