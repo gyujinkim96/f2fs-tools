@@ -4,8 +4,7 @@
 
 export DEB_BUILD_MAINT_OPTIONS ?= hardening=+all
 
-DPKG_EXPORT_BUILDFLAGS = 1
-include /usr/share/dpkg/default.mk
+include /usr/share/dpkg/architecture.mk
 
 %:
 	dh $@
@@ -23,6 +22,3 @@ execute_before_dh_install:
 # but for now, override it by just saying... just don't.
 override_dh_dwz:
 	dh_dwz -N f2fs-tools-udeb
-
-test_printenv:
-	printenv | sort
