@@ -1,3 +1,3 @@
 usr/include/*			usr/include/f2fs-tools
 include/android_config.h	usr/include/f2fs-tools
-usr/lib/*/libf2fs.a
+usr/lib/${DEB_HOST_MULTIARCH}/libf2fs.a
