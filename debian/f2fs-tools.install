@@ -1,2 +1,4 @@
-sbin/*
+# All but sbin/sg_write_buffer
+sbin/*f2fs*
+
 usr/share/man/man8/*.8

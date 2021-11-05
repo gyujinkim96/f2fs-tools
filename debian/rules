@@ -13,10 +13,6 @@ override_dh_auto_configure:
 	dh_auto_configure -- --sbindir=/sbin --disable-shared \
 		--with-root-libdir=/lib/$(DEB_HOST_MULTIARCH)
 
-execute_before_dh_install:
-	find -name "*.la" -delete
-	rm debian/tmp/sbin/sg_write_buffer
-
 # dh_dwz when run on f2fs-tools-udeb ends up installing the
 # /usr/lib/debug/.dwz files into the udeb.  I think that's a bug,
 # but for now, override it by just saying... just don't.

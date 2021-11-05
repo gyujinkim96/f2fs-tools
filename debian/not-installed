@@ -1,0 +1,5 @@
+# Policy recommends not to install libtool .la files
+usr/lib/*/libf2fs*.la
+
+# See f2fs-tools.install and f2fs-tools-udeb.install
+sbin/sg_write_buffer
