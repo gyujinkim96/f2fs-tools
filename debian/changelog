@@ -6,6 +6,7 @@ f2fs-tools (1.15.0-1) UNRELEASED; urgency=medium
 
   [ Michael Tokarev ]
   * update to new upstream version (1.15.0)
+  * Add spelling-comamnd.patch to fix spelling in binary
 
  -- Theodore Y. Ts'o <tytso@mit.edu>  Sun, 03 Jan 2021 21:57:47 -0500
 
