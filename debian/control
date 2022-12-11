@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Filesystems Group <filesystems-devel@lists.alioth.debian.org>
 Uploaders: Vincent Cheng <vcheng@debian.org>, Theodore Y. Ts'o <tytso@mit.edu>
 Build-Depends:
- debhelper-compat (= 12),
+ debhelper-compat (= 13),
  libblkid-dev,
  libselinux1-dev,
  pkg-config,
