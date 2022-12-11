@@ -1,7 +1,11 @@
-f2fs-tools (1.14.0-3) UNRELEASED; urgency=medium
+f2fs-tools (1.15.0-1) UNRELEASED; urgency=medium
 
+  [ Theodore Y. Ts'o ]
   * Don't use TAB characters to start a continuation line
   * Drop undeeded dh_makeshlibs override
+
+  [ Michael Tokarev ]
+  * update to new upstream version (1.15.0)
 
  -- Theodore Y. Ts'o <tytso@mit.edu>  Sun, 03 Jan 2021 21:57:47 -0500
 
