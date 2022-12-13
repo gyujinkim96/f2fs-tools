@@ -1,4 +1,4 @@
-f2fs-tools (1.15.0-1) UNRELEASED; urgency=medium
+f2fs-tools (1.15.0-1) unstable; urgency=medium
 
   [ Theodore Y. Ts'o ]
   * Don't use TAB characters to start a continuation line
