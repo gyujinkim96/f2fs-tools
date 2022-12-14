@@ -12,7 +12,7 @@ f2fs-tools (1.15.0-1) unstable; urgency=medium
     simplify the rules a bit
   * d/rules: remove dbgsym migration rule for version 1.12
 
- -- Michael Tokarev <mjt@tls.msk.ru>  Sun, 11 Dec 2022 10:30:44 +0300
+ -- Theodore Y. Ts'o <tytso@mit.edu>  Wed, 14 Dec 2022 10:49:06 -0500
 
 f2fs-tools (1.14.0-2) unstable; urgency=medium
 
