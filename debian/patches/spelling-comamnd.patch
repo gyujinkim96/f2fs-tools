@@ -9,12 +9,18 @@ Signed-off-by: Michael Tokarev <mjt@tls.msk.ru>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/tools/f2fs_io/f2fs_io.c b/tools/f2fs_io/f2fs_io.c
-index 0edac6f..8174f71 100644
+index 8174f71..0edac6f 100644
 --- a/tools/f2fs_io/f2fs_io.c
 +++ b/tools/f2fs_io/f2fs_io.c
-@@ -454 +454 @@ static void do_fallocate(int argc, char **argv, const struct cmd_desc *cmd)
+@@ -451,7 +451,7 @@ static void do_fallocate(int argc, char **argv, const struct cmd_desc *cmd)
+ #define erase_desc "erase a block device"
+ #define erase_help				\
+ "f2fs_io erase [block_device_path]\n\n"		\
 -"Send DISCARD | BLKSECDISCARD comamnd to"	\
 +"Send DISCARD | BLKSECDISCARD command to"	\
+ "block device in block_device_path\n"		\
+ 
+ static void do_erase(int argc, char **argv, const struct cmd_desc *cmd)
 -- 
 2.30.2
 
