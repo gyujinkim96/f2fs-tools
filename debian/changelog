@@ -2,6 +2,7 @@ f2fs-tools (1.16.0-1) UNRELEASED; urgency=medium
 
   [ Vincent Cheng ]
   * New upstream release.
+  * Updated Standards compliance to 4.6.2.
 
   [ Nicolas Boulenguez ]
   * Various packaging improvements. (Closes: #990533)
