@@ -1,3 +1,10 @@
+f2fs-tools (1.15.0-2) UNRELEASED; urgency=medium
+
+  [ Nicolas Boulenguez ]
+  * Various packaging improvements. (Closes: #990533)
+
+ -- Vincent Cheng <vcheng@debian.org>  Sun, 16 Jul 2023 21:03:45 -0700
+
 f2fs-tools (1.15.0-1) unstable; urgency=medium
 
   [ Theodore Y. Ts'o ]
