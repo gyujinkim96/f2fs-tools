@@ -1,4 +1,4 @@
-f2fs-tools (1.16.0-1) UNRELEASED; urgency=medium
+f2fs-tools (1.16.0-1) unstable; urgency=medium
 
   [ Vincent Cheng ]
   * New upstream release.
