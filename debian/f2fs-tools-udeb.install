@@ -1,2 +1,2 @@
 # All but sbin/sg_write_buffer
-sbin/*f2fs*
+usr/sbin/*f2fs*
