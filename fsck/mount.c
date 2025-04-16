@@ -37,9 +37,9 @@ static int get_device_idx(struct f2fs_sb_info *sbi, uint32_t segno)
 {
 	block_t seg_start_blkaddr;
 	int i;
-
+	
 	seg_start_blkaddr = SM_I(sbi)->main_blkaddr +
-				segno * DEFAULT_BLOCKS_PER_SEGMENT;
+				segno * sbi->blocks_per_seg;
 	for (i = 0; i < c.ndevs; i++)
 		if (c.devices[i].start_blkaddr <= seg_start_blkaddr &&
 			c.devices[i].end_blkaddr > seg_start_blkaddr)
@@ -2061,7 +2061,7 @@ static int build_curseg(struct f2fs_sb_info *sbi)
 			segno = get_cp(cur_node_segno[i - CURSEG_HOT_NODE]);
 		}
 		ASSERT(segno < MAIN_SEGS(sbi));
-		ASSERT(blk_off < DEFAULT_BLOCKS_PER_SEGMENT);
+		ASSERT(blk_off < sbi->blocks_per_seg);
 
 		array[i].segno = segno;
 		array[i].zone = GET_ZONENO_FROM_SEGNO(sbi, segno);

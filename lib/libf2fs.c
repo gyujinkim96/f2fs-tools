@@ -1256,7 +1256,7 @@ int f2fs_get_f2fs_info(void)
 		 * BLKZONED feature set at format time, this is only an
 		 * optimization as sequential writes will not be enforced.
 		 */
-		c.segs_per_sec = c.zone_blocks / DEFAULT_BLOCKS_PER_SEGMENT;
+		c.segs_per_sec = c.zone_blocks / c.sectors_per_blk;
 		c.secs_per_zone = 1;
 	} else {
 		if(c.zoned_mode != 0) {

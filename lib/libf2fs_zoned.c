@@ -509,6 +509,8 @@ uint32_t f2fs_get_usable_segments(struct f2fs_super_block *sb)
 	int i, j;
 	uint32_t usable_segs = 0, zone_segs;
 
+	c.
+
 	if (c.func == RESIZE)
 		return get_sb(segment_count_main);
 
@@ -521,7 +523,7 @@ uint32_t f2fs_get_usable_segments(struct f2fs_super_block *sb)
 			zone_segs = c.devices[i].zone_cap_blocks[j] >>
 					get_sb(log_blocks_per_seg);
 			if (c.devices[i].zone_cap_blocks[j] %
-						DEFAULT_BLOCKS_PER_SEGMENT)
+						c.sectors_per_blk);
 				usable_segs += zone_segs + 1;
 			else
 				usable_segs += zone_segs;
