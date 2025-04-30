@@ -313,10 +313,11 @@ static int f2fs_prepare_super_block(void)
 					c.devices[i].total_segments *
 					c.blks_per_seg - 1;
 		}
+
+		c.devices[i].total_segments	= c.devices[i].total_segments / c.segs_per_zone * c.segs_per_zone;
 		if (c.ndevs > 1) {
 			memcpy(sb->devs[i].path, c.devices[i].path, MAX_PATH_LEN);
-			sb->devs[i].total_segments =
-					cpu_to_le32(c.devices[i].total_segments);
+			sb->devs[i].total_segments = cpu_to_le32(c.devices[i].total_segments);
 		}
 
 		c.total_segments += c.devices[i].total_segments;
