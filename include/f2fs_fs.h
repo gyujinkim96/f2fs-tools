@@ -747,6 +747,7 @@ enum {
 #define F2FS_FEATURE_CASEFOLD		0x1000
 #define F2FS_FEATURE_COMPRESSION	0x2000
 #define F2FS_FEATURE_RO			0x4000
+#define F2FS_FEATURE_SPLITFTL  0x8000
 
 #define MAX_VOLUME_NAME		512
 
@@ -1749,6 +1750,7 @@ struct feature feature_table[] = {					\
 	{ "casefold",			F2FS_FEATURE_CASEFOLD },	\
 	{ "compression",		F2FS_FEATURE_COMPRESSION },	\
 	{ "ro",				F2FS_FEATURE_RO},		\
+	{"splitftl", 		F2FS_FEATURE_SPLITFTL}, \
 	{ NULL,				0x0},				\
 };
 
